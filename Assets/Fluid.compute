@@ -7,6 +7,7 @@
 #pragma kernel PFinish
 #pragma kernel Jacobi1
 #pragma kernel Jacobi2
+#pragma kernel DrawColor
 
 // Common parameter
 float Time;
@@ -48,6 +49,9 @@ RWTexture2D<float> X1_out;
 Texture2D<float2> X2_in;
 Texture2D<float2> B2_in;
 RWTexture2D<float2> X2_out;
+
+// Draw color
+float2 MousePos;
 
 // Advect step
 [numthreads(8, 8, 1)]
@@ -126,4 +130,14 @@ void Jacobi2(uint2 tid : SV_DispatchThreadID)
 {
     X2_out[tid] = (X2_in[tid - int2(1, 0)] + X2_in[tid + int2(1, 0)] +
                    X2_in[tid - int2(0, 1)] + X2_in[tid + int2(0, 1)] + Alpha * B2_in[tid]) / Beta;
+}
+
+// Draw color with mouse
+[numthreads(8, 8, 1)]
+void DrawColor(uint2 tid : SV_DispatchThreadID)
+{
+    float color = distance(tid, MousePos) < 10 ? 1 : 0;
+    color = max(color, C_out[tid].r );
+
+    C_out[tid] = float4(color, 0, 0, 1);
 }

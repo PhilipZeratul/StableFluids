@@ -33,7 +33,7 @@ Shader "Hidden/StableFluids"
 
         // Color advection with the velocity field
         float2 delta = tex2D(_VelocityField, i.uv).xy * aspect_inv * deltaTime;
-        float3 color = tex2D(_MainTex, i.uv - delta).xyz;
+        float3 color = tex2D(_MainTex, i.uv - delta).xyz;        
 
         // Dye (injection color)
         float3 dye = saturate(sin(time * float3(2.72, 5.12, 4.98)) + 0.5);
@@ -41,9 +41,12 @@ Shader "Hidden/StableFluids"
         // Blend dye with the color from the buffer.
         float2 pos = (i.uv - 0.5) * aspect;
         float amp = exp(-_ForceExponent * distance(_ForceOrigin, pos));
-        color = lerp(color, dye, saturate(amp * 100));
+        color = lerp(color * 0.95, dye, saturate(amp * 100));
 
         return half4(color, 1);
+        //return half4(dye, 1);
+        //return half4(amp.xxx * 100, 1);
+        //return half4(delta * 1000, 0, 1);
     }
 
     half4 frag_render(v2f_img i) : SV_Target

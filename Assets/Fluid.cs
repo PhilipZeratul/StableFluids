@@ -37,6 +37,7 @@ namespace StableFluids
             public const int PFinish = 3;
             public const int Jacobi1 = 4;
             public const int Jacobi2 = 5;
+            public const int DrawColor = 6;
         }
 
         int ThreadCountX { get { return (_resolution                                + 7) / 8; } }
@@ -96,7 +97,7 @@ namespace StableFluids
             _colorRT1 = AllocateBuffer(4, Screen.width, Screen.height);
             _colorRT2 = AllocateBuffer(4, Screen.width, Screen.height);
 
-            Graphics.Blit(_initial, _colorRT1);
+            //Graphics.Blit(_initial, _colorRT1);
 
         #if UNITY_IOS
             Application.targetFrameRate = 60;
@@ -130,7 +131,7 @@ namespace StableFluids
 
             // Common variables
             _compute.SetFloat("Time", Time.time);
-            _compute.SetFloat("DeltaTime", dt);
+            _compute.SetFloat("DeltaTime", dt);            
 
             // Advection
             _compute.SetTexture(Kernels.Advect, "U_in", VFB.V1);
@@ -200,6 +201,14 @@ namespace StableFluids
             _compute.SetTexture(Kernels.PFinish, "P_in", VFB.P1);
             _compute.SetTexture(Kernels.PFinish, "U_out", VFB.V1);
             _compute.Dispatch(Kernels.PFinish, ThreadCountX, ThreadCountY, 1);
+
+            // Draw color
+            if (Input.GetMouseButton(0))
+            {
+                _compute.SetVector("MousePos", new Vector2(Input.mousePosition.x, Input.mousePosition.y));
+                _compute.SetTexture(Kernels.DrawColor, "C_out", _colorRT1);
+                _compute.Dispatch(Kernels.DrawColor, _colorRT1.width / 8, _colorRT1.height / 8, 1);
+            }
 
             // Apply the velocity field to the color buffer.
             var offs = Vector2.one * (Input.GetMouseButton(1) ? 0 : 1e+7f);
